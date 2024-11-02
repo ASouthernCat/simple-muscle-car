@@ -1,0 +1,184 @@
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+#webgl-container {
+  position: fixed;
+  width: 100%;
+  height: 100vh;
+}
+#webgl {
+  outline: none;
+  width: 100%;
+  height: 100%;
+}
+
+.content-container{
+  pointer-events: none;
+  z-index: 1;
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  max-width: 35%;
+}
+
+.content {
+  pointer-events: all;
+  padding-left: 12px;
+  color: #ccc;
+}
+
+.content a {
+  color: rgba(255, 255, 0, 0.774);
+}
+
+.content-container img {
+  user-select: none;
+  width: 100%;
+  padding: 0px 12px 12px 6px;
+}
+
+.useful-lib {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.content-container .logo {
+  width: 22px;
+  padding: 0;
+  margin-right: 12px;
+  will-change: filter;
+  transition: filter 200ms;
+}
+.content-container .logo:hover {
+  filter: drop-shadow(0 0 8px #ffff14);
+}
+
+.space {
+  user-select: none;
+  position: absolute;
+  z-index: 1;
+  top: 90%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 160px;
+  height: 50px;
+  background-color: rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(2px);
+  border-radius: 10px;
+
+  font-size: 18px;
+  letter-spacing: 2px;
+  text-align: center;
+  line-height: 50px;
+  color: #aaa;
+  text-decoration: underline;
+  text-decoration-color: #aaaaaa9f;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 10px;
+}
+.space-active {
+  pointer-events: none;
+  animation: highlightAndFadeOut 1.5s forwards;
+}
+@keyframes highlightAndFadeOut {
+  0% {
+    color: #555;
+    background-color: rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(2px);
+  }
+  50% {
+    color: #eee;
+    background-color: rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(2px);
+  }
+  100% {
+    color: transparent;
+    text-decoration-color: transparent;
+    background-color: rgba(0, 0, 0, 0);
+    backdrop-filter: blur(0px);
+  }
+}
+
+.link-me {
+  position: absolute;
+  user-select: none;
+  bottom: 0;
+  right: 50%;
+  transform: translate(50%, 0%);
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+.link-me a{
+  color: #888;
+  font-size: 12px;
+}
+.link-me .github-icon {
+  width: 18px;
+  margin-left: 4px;
+  fill: currentColor;
+  will-change: fill;
+  transition: fill 100ms;
+}
+.link-me .github-icon:hover {
+  fill: #a3ff2b;
+}
+
+/* https://css-loaders.com/ */
+.loader-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 100;
+  user-select: none;
+  background-color: rgba(3, 10, 16, 0.87);
+  transition: background-color 0.5s ease-in-out;
+}
+.loader {
+  width: 11px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background-color: rgb(255, 253, 230);
+  display: grid;
+  animation: l22-0 2s infinite linear;
+  transition: background-color 0.5s ease-in-out;
+}
+.loader:before,
+.loader:after {
+  content: "";
+  grid-area: 1/1;
+  margin: 15%;
+  border-radius: 50%;
+  background: inherit;
+  transform: rotate(0deg) translate(150%);
+  animation: l22 1s infinite;
+}
+.loader:after {
+  animation-delay: -.5s
+}
+@keyframes l22-0 {
+  100% {transform: rotate(1turn)}
+}
+@keyframes l22 {
+  100% {transform: rotate(1turn) translate(150%)}
+}
+.loaded {
+  pointer-events: none;
+  background-color: transparent;
+}
+.loaded .loader {
+  background-color: transparent;
+}

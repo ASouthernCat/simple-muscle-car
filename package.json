@@ -1,0 +1,21 @@
+{
+  "name": "simple-muscle-car",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --port 3200 --host 0.0.0.0",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "vite": "^5.3.4"
+  },
+  "dependencies": {
+    "@alienkitty/alien.js": "^1.2.0",
+    "@pmndrs/vanilla": "^1.19.3",
+    "gsap": "^3.12.5",
+    "postprocessing": "^6.36.3",
+    "three": "^0.169.0"
+  }
+}

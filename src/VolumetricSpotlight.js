@@ -175,6 +175,7 @@ export default class VolumetricSpotlight extends SpotLight {
     update() {
         this.volumeMaterial.lightColor = this.color;
         this.volumeMaterial.spotPosition.copy(this.volumeMesh.getWorldPosition(worldPosition));
+        this.volumeMesh.castShadow = false;
         this.volumeMesh.lookAt(this.target.getWorldPosition(worldPosition));
         if (this.volumeParams.useDepth) {
             this.renderDepth();

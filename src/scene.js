@@ -10,6 +10,8 @@ import { initEffect } from './effect';
 import { initCar } from './car';
 import VolumetricSpotlight from './VolumetricSpotlight';
 import gsap from 'gsap';
+import FBOEnvironment from './FBOEnvironment';
+import isMobileDevice from './utils/deviceType';
 
 async function initScene() {
     console.log('initScene');
@@ -53,39 +55,10 @@ async function initScene() {
     controls.rotateSpeed = 1.5;
     sceneFolder.add(controls, 'autoRotate')
 
-    const ambientLight = new THREE.AmbientLight(0xffffff, 1);
-    scene.add(ambientLight);
-    const drLight = new THREE.DirectionalLight(0xffffee, 3);
-    drLight.position.set(3.96, 2.6, -0.5);
-    drLight.shadow.bias = -0.0006;
-    scene.add(drLight);
-    drLight.castShadow = true;
-    const pointLight = new THREE.PointLight(0xffffc2, 260, 20);
-    pointLight.position.set(-4, 4.8, 1.6);
-    pointLight.castShadow = true;
-    pointLight.shadow.bias = -0.0064
-    pointLight.shadow.mapSize.set(2048, 2048)
-    scene.add(pointLight);
-    const pointLight2 = new THREE.PointLight(0x86fefc, 150, 20, 4);
-    pointLight2.position.set(3.45, 2.6, 4.5);
-    pointLight2.castShadow = true;
-    pointLight2.shadow.bias = -0.004
-    scene.add(pointLight2);
-
     const lightFolder = sceneFolder.addFolder('light')
     lightFolder.close()
-    lightFolder.add(ambientLight, 'intensity').name('ambientIntensity')
-    lightFolder.add(drLight, 'intensity').name('DRLightIntensity')
-    lightFolder.add(drLight.shadow, 'bias').step(0.0001).name('DRLightBias')
-    lightFolder.add(pointLight.shadow, 'bias').step(0.0001).name('pointLightBias')
-    lightFolder.add(pointLight2.shadow, 'bias').step(0.0001).name('pointLight2Bias')
-    lightFolder.add(pointLight.position, 'x').step(0.01).name('pointLightX')
-    lightFolder.add(pointLight.position, 'y').step(0.01).name('pointLightY')
-    lightFolder.add(pointLight.position, 'z').step(0.01).name('pointLightZ')
-    lightFolder.add(pointLight, 'intensity').min(0).max(1000).step(1).name('pointLightIntensity')
-    lightFolder.addColor({ color: pointLight.color.getHexString() }, 'color').onChange((value) => {
-        pointLight.color = new THREE.Color(value)
-    }).name('pointLightColor')
+    let fboEnvironment = null
+    initEnvLight()
 
     const renderer = new THREE.WebGLRenderer({
         canvas,
@@ -135,7 +108,12 @@ async function initScene() {
     spotlightGroup.add(volumeSpotlight, volumeSpotlight.target, volumeSpotlight2, volumeSpotlight2.target);
     spotlightGroup.position.set(0,-0.18,-0.2);
     carScene.getObjectByName('车身').add(spotlightGroup);
-    gui.add(spotlightGroup, 'visible').name('丁达尔光')
+    gui.add(spotlightGroup, 'visible').name('丁达尔光').listen()
+
+    if(isMobileDevice()){
+        spotlightGroup.visible = false
+        scene.getObjectByName('reflectorMesh').visible = false
+    }
 
     initResizeEventListener([camera], [renderer, composer]);
 
@@ -155,6 +133,8 @@ async function initScene() {
 
         volumeSpotlight.update()
         volumeSpotlight2.update()
+
+        fboEnvironment && fboEnvironment.update(renderer, scene)
         
         controls.update();
         
@@ -162,6 +142,101 @@ async function initScene() {
         composer.render(delta);
 
         requestAnimationFrame(render);
+    }
+
+    /**
+     * 初始化环境灯光
+     */
+    function initEnvLight() {
+        const ambientLight = new THREE.AmbientLight(0xffffff, 1);
+        scene.add(ambientLight);
+        const drLight = new THREE.DirectionalLight(0xffffee, 3);
+        drLight.position.set(3.96, 2.6, -0.5);
+        drLight.shadow.bias = -0.0006;
+        scene.add(drLight);
+        drLight.castShadow = true;
+
+        lightFolder.add(ambientLight, 'intensity').name('ambientIntensity')
+        lightFolder.add(drLight, 'intensity').name('DRLightIntensity')
+        lightFolder.add(drLight, 'castShadow')
+        lightFolder.add(drLight.shadow, 'bias').step(0.0001).name('DRLightBias')
+
+        // 移动设备使用fbo环境光
+        if(isMobileDevice()){
+            // drLight.shadow.mapSize.set(128, 128)
+            setFBOEnv()
+            alert('实时渲染 | 移动端采用FBO模拟灯光效果，建议使用PC端浏览器预览')
+            gui.close()
+        } else {
+            setNormalLight()
+        }
+    }
+
+    function setFBOEnv(){
+        const circle = new THREE.Mesh(
+            new THREE.CircleGeometry(2, 32), 
+            new THREE.MeshStandardMaterial({ emissive: 0xffffcc,emissiveIntensity: 1.5, side: THREE.DoubleSide })
+        );
+        circle.position.set(-3.4, 0.9, 0.8);
+        circle.rotation.x = Math.PI / 2;
+        circle.lookAt(0, 0, 0);
+        const circle2 = new THREE.Mesh(
+            new THREE.CircleGeometry(2, 32), 
+            new THREE.MeshStandardMaterial({ emissive: 0xfff9bd,emissiveIntensity: 1.5, side: THREE.DoubleSide })
+        );
+        circle2.position.set(2, 2.3, 3.6);
+        circle2.rotation.x = Math.PI / 2;
+        circle2.lookAt(0, 0, 0);
+    
+        const fboEnv = new FBOEnvironment(circle , circle2)
+        fboEnv.setEnvObjectsVisible(false)
+        scene.environment = fboEnv.texture
+        scene.add(fboEnv.group)
+        fboEnvironment = fboEnv
+    
+        const fboFolder = gui.addFolder('FBO')
+        fboFolder.close()
+        fboFolder.add({fboEnvVisible: false}, 'fboEnvVisible').onChange((value) => {
+            fboEnv.setEnvObjectsVisible(value)
+        })
+        fboFolder.add(circle.position, 'x').step(0.1).name('circleX')
+        fboFolder.add(circle.position, 'y').step(0.1).name('circleY')
+        fboFolder.add(circle.position, 'z').step(0.1).name('circleZ')
+        fboFolder.add(circle.material, 'emissiveIntensity')
+        fboFolder.addColor(circle.material, 'emissive').name('circleColor')
+        fboFolder.add(circle2.position, 'x').step(0.1).name('circle2X')
+        fboFolder.add(circle2.position, 'y').step(0.1).name('circle2Y')
+        fboFolder.add(circle2.position, 'z').step(0.1).name('circle2Z')
+        fboFolder.add(circle2.material, 'emissiveIntensity')
+        fboFolder.addColor(circle2.material, 'emissive').name('circle2Color')
+        fboFolder.add({ lookAt: ()=> {
+            circle.lookAt(0, 0, 0)
+            circle2.lookAt(0, 0, 0)
+        }}, 'lookAt')
+    }
+
+    function setNormalLight(){
+        const pointLight = new THREE.PointLight(0xffffc2, 260, 20);
+        pointLight.position.set(-4, 4.8, 1.6);
+        pointLight.castShadow = true;
+        pointLight.shadow.bias = -0.0064
+        pointLight.shadow.mapSize.set(2048, 2048)
+        scene.add(pointLight);
+        const pointLight2 = new THREE.PointLight(0x86fefc, 150, 20, 4);
+        pointLight2.position.set(3.45, 2.6, 4.5);
+        pointLight2.castShadow = true;
+        pointLight2.shadow.bias = -0.004
+        scene.add(pointLight2);
+
+        lightFolder.add(pointLight.shadow, 'bias').step(0.0001).name('pointLightBias')
+        lightFolder.add(pointLight2.shadow, 'bias').step(0.0001).name('pointLight2Bias')
+        lightFolder.add(pointLight.position, 'x').step(0.01).name('pointLightX')
+        lightFolder.add(pointLight.position, 'y').step(0.01).name('pointLightY')
+        lightFolder.add(pointLight.position, 'z').step(0.01).name('pointLightZ')
+        lightFolder.add(pointLight, 'intensity').min(0).max(1000).step(1).name('pointLightIntensity')
+        lightFolder.addColor({ color: pointLight.color.getHexString() }, 'color').onChange((value) => {
+            pointLight.color = new THREE.Color(value)
+        }).name('pointLightColor')
     }
 
     /**
@@ -222,6 +297,7 @@ async function initScene() {
                     space.classList.add('space-active')
                 }
             }
+            gui.open()
         })
     }
 

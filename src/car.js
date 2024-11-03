@@ -110,6 +110,7 @@ async function initCar(scene) {
         // 反射地面
         const reflectorGeometry = new THREE.CircleGeometry(3.35, 128)
         const reflectorMesh = new THREE.Mesh(reflectorGeometry, reflectorMaterial)
+        reflectorMesh.name = 'reflectorMesh'
         reflectorMesh.add(reflector)
         reflectorMesh.position.set(0, 0.37, 0.193)
         reflectorMesh.rotation.x = -Math.PI / 2
@@ -119,7 +120,7 @@ async function initCar(scene) {
             reflectorMesh.visible = true
         }
         scene.add(reflectorMesh)
-        carFolder.add(reflectorMesh, 'visible').name('反射圆盘')
+        carFolder.add(reflectorMesh, 'visible').name('反射圆盘').listen()
     }
 
     return {
